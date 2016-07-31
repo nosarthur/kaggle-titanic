@@ -18,6 +18,9 @@ df.Embarked.fillna('S', inplace=True)
 #stdsc = StandardScaler(copy=False, with_mean=False)
 #stdsc.fit_transform(df[['Fare', 'Age']])
 
+# split Age by 16, i.e., child = 0 and adult = 1
+df.loc[df.Age<16,  'Age'] = 0
+df.loc[df.Age>=16, 'Age'] = 1
 
 # one-hot encoding on nominal features 'Sex' and 'Embarked'
 df.drop(['Name', 'Ticket', 'Cabin', 'PassengerId'], axis=1, inplace=True)
@@ -41,6 +44,8 @@ print(scores.mean())
 
 scores = cross_val_score(eclf, df[predictors], df['Survived'], cv=15)
 print('CV accuracy: %.3f +/- %.3f' % (scores.mean(), scores.std()))
+
+adsfa
 
 # make submission
 test = pd.read_csv('test.csv')
