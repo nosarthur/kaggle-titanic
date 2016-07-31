@@ -89,4 +89,4 @@ ENV/
 .ropeproject
 
 *.swp
-titanic_submission.csv
+*.csv

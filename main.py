@@ -1,4 +1,3 @@
-import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 from sklearn.preprocessing import StandardScaler
@@ -9,15 +8,16 @@ from sklearn.neighbors import KNeighborsClassifier
 from sklearn.naive_bayes import GaussianNB
 
 # load data
-df = pd.read_csv('data/train.csv')
+df = pd.read_csv('train.csv')
 df.info(null_counts=True)
 
 # fill in missing values and scaling 
+#df.loc[df.Fare <5, 'Fare'] = df.Fare.median()
 df.Age.fillna(df.Age.median(), inplace=True)
 df.Embarked.fillna('S', inplace=True)
+#stdsc = StandardScaler(copy=False, with_mean=False)
+#stdsc.fit_transform(df[['Fare', 'Age']])
 
-stdsc = StandardScaler(copy=False, with_mean=False)
-stdsc.fit_transform(df[['Fare', 'Age']])
 
 # one-hot encoding on nominal features 'Sex' and 'Embarked'
 df.drop(['Name', 'Ticket', 'Cabin', 'PassengerId'], axis=1, inplace=True)
@@ -27,21 +27,23 @@ df = pd.get_dummies(df)
 # stratified k-fold cross-validation
 predictors = df.columns.tolist()
 predictors.remove('Survived')
-svm_predictors = ['Pclass', 'Sex_male', 'Sex_female']
+#svm_predictors = ['Pclass', 'Sex_male', 'Sex_female']
 
-clf1 = LogisticRegression(C=1, random_state=1)
-clf2 = RandomForestClassifier(random_state=1, n_estimators=10, min_samples_split=5, min_samples_leaf=2)
-
+clf1 = LogisticRegression(C=1, random_state=1, warm_start=True, penalty='l2')
+clf2 = RandomForestClassifier(random_state=1, n_estimators=10, 
+                min_samples_split=5, min_samples_leaf=2, max_features=3)
 eclf = VotingClassifier([('lr', clf1), ('rf', clf2)], voting='soft')
 
 scores = cross_val_score(clf1, df[predictors], df['Survived'], cv=15)
+print(scores.mean())
+scores = cross_val_score(clf2, df[predictors], df['Survived'], cv=15)
 print(scores.mean())
 
 scores = cross_val_score(eclf, df[predictors], df['Survived'], cv=15)
 print('CV accuracy: %.3f +/- %.3f' % (scores.mean(), scores.std()))
 
 # make submission
-test = pd.read_csv('data/test.csv')
+test = pd.read_csv('test.csv')
 ids = test.PassengerId
 test.Age.fillna(test.Age.median(), inplace=True)
 test.Fare.fillna(test.Fare.median(), inplace=True)
